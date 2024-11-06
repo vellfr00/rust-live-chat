@@ -44,7 +44,7 @@ impl Room {
 
     pub fn post_new_message(&mut self, message: Arc<Message>) -> Result<(), &'static str> {
         let author_user = message.author.clone();
-        if(!self.is_user_in_room(author_user)) {
+        if !self.is_user_in_room(author_user) {
             return Err("User is not in the room");
         }
 
