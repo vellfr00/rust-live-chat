@@ -52,3 +52,67 @@ impl Room {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+
+    #[test]
+    fn test_room_new() {
+        let room = Room::new("test".to_string());
+        assert_eq!(room.name, "test");
+    }
+
+    #[test]
+    fn test_room_is_user_in_room() {
+        let user = Arc::new(User::new("test".to_string()));
+        let mut room = Room::new("test".to_string());
+        room.add_user_to_room(user.clone()).unwrap();
+        assert_eq!(room.is_user_in_room(user.clone()), true);
+    }
+
+    #[test]
+    fn test_room_add_user_to_room() {
+        let user = Arc::new(User::new("test".to_string()));
+        let mut room = Room::new("test".to_string());
+        room.add_user_to_room(user.clone()).unwrap();
+        assert_eq!(room.users.len(), 1);
+    }
+
+    #[test]
+    fn test_room_add_user_to_room_error() {
+        let user = Arc::new(User::new("test".to_string()));
+        let mut room = Room::new("test".to_string());
+        room.add_user_to_room(user.clone()).unwrap();
+        let result = room.add_user_to_room(user.clone());
+        assert_eq!(result, Err("User is already in the room"));
+    }
+
+    #[test]
+    fn test_room_remove_user_from_room() {
+        let user = Arc::new(User::new("test".to_string()));
+        let mut room = Room::new("test".to_string());
+        room.add_user_to_room(user.clone()).unwrap();
+        room.remove_user_from_room(user.clone()).unwrap();
+        assert_eq!(room.users.len(), 0);
+    }
+
+    #[test]
+    fn test_room_remove_user_from_room_error() {
+        let user = Arc::new(User::new("test".to_string()));
+        let mut room = Room::new("test".to_string());
+        let result = room.remove_user_from_room(user.clone());
+        assert_eq!(result, Err("User is not in the room"));
+    }
+
+    #[test]
+    fn test_room_post_new_message() {
+        let user = Arc::new(User::new("test".to_string()));
+        let message = Arc::new(Message::new(user.clone(), "test".to_string()));
+        let mut room = Room::new("test".to_string());
+        room.add_user_to_room(user.clone()).unwrap();
+        room.post_new_message(message.clone()).unwrap();
+        assert_eq!(room.messages.len(), 1);
+    }
+}
