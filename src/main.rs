@@ -1,5 +1,8 @@
 mod entities;
+mod web_server;
 
-fn main() {
-    println!("Hello, world!");
+#[tokio::main]
+async fn main() {
+    let web_server = web_server::WebServer::new();
+    web_server.run().await;
 }
