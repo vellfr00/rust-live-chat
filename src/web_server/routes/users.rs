@@ -5,20 +5,20 @@ use warp::Filter;
 use super::with_server;
 
 pub fn users_routes(server: Arc<Mutex<Server>>) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    user_exists_in_server_by_username(server.clone())
+    get_user_in_server_by_username(server.clone())
         .or(register_user_to_server(server.clone()))
 }
 
 /**
  * GET /users/:username
- * Checks if a user exists in the server.
+ * Checks if a user exists in the server and returns it.
  * Returns 200 OK if the user exists in the server, 404 NOT FOUND otherwise.
  */
-fn user_exists_in_server_by_username(server: Arc<Mutex<Server>>) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+fn get_user_in_server_by_username(server: Arc<Mutex<Server>>) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path!("users" / String)
         .and(warp::get())   
         .and(with_server(server))
-        .and_then(handlers::users::user_exists_in_server_by_username)
+        .and_then(handlers::users::get_user_in_server_by_username)
 }
 
 /**
