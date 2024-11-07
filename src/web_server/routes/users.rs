@@ -32,3 +32,94 @@ fn register_user_to_server(server: Arc<Mutex<Server>>) -> impl Filter<Extract = 
         .and(with_server(server))
         .and_then(handlers::users::register_user_to_server)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::entities::user::User;
+    use crate::entities::server::Server;
+    use warp::http::StatusCode;
+    use serde_json::{self};
+    use warp::test::request;
+    use crate::web_server::handlers::ErrorDetailsResponse;
+
+
+    #[tokio::test]
+    async fn test_get_user_in_server_by_username() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+
+        let response = request()
+            .method("GET")
+            .path("/users/test_user")
+            .reply(&users_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_ne!(response.body().len(), 0);
+        
+        let user: User = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(user.username, "test_user");
+    }
+
+    #[tokio::test]
+    async fn test_get_user_in_server_by_username_not_found() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+
+        let response = request()
+            .method("GET")
+            .path("/users/test_user")
+            .reply(&users_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        let error_response = &ErrorDetailsResponse {
+            error_id: "ERR__USER_NOT_FOUND".to_string(),
+            error_message: "User with username test_user not found in server".to_string()
+        };
+        let error_response_to_serialized_string = serde_json::to_string(&error_response).unwrap();
+        let response_body = std::str::from_utf8(response.body()).unwrap();
+        assert_eq!(response_body, error_response_to_serialized_string);
+    }
+
+    #[tokio::test]
+    async fn test_register_user_to_server() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+
+        let response = request()
+            .method("POST")
+            .path("/users/test_user")
+            .reply(&users_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_ne!(response.body().len(), 0);
+
+        let user: User = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(user.username, "test_user");
+    }
+
+    #[tokio::test]
+    async fn test_register_user_to_server_already_exists() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let user = User::new("test_user".to_string());
+        server.lock().unwrap().register_user(&user.username).unwrap();
+
+        let response = request()
+            .method("POST")
+            .path("/users/test_user")
+            .reply(&users_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+
+        let error_response = &ErrorDetailsResponse {
+            error_id: "ERR__USER_ALREADY_EXISTS".to_string(),
+            error_message: "User with username test_user already exists in server".to_string()
+        };
+        let error_response_to_serialized_string = serde_json::to_string(&error_response).unwrap();
+        let response_body = std::str::from_utf8(response.body()).unwrap();
+        assert_eq!(response_body, error_response_to_serialized_string);
+    }
+}
