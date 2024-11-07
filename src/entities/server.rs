@@ -1,17 +1,20 @@
+use uuid::Uuid;
 use super::{message::Message, room::Room, user::User};
 use std::sync::{Arc, Mutex};
 
 #[derive(Debug)]
 pub struct Server {
-    pub id: String,
+    pub id: Uuid,
+    pub name: String,
     pub users: Vec<Arc<User>>,
     pub rooms: Vec<Arc<Mutex<Room>>>,
 }
 
 impl Server {
-    pub fn new(id: String) -> Self {
+    pub fn new(name: String) -> Self {
         Self {
-            id,
+            id: Uuid::new_v4(),
+            name,
             users: Vec::new(),
             rooms: Vec::new(),
         }
@@ -115,7 +118,7 @@ mod tests {
     #[test]
     fn test_server_new() {
         let server = Server::new("test".to_string());
-        assert_eq!(server.id, "test");
+        assert_eq!(server.name, "test");
     }
 
     #[test]
