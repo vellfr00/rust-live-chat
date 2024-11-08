@@ -127,3 +127,56 @@ pub async fn add_user_to_room(room_name: String, username: String, server: Arc<M
         }
     }
 }
+
+pub async fn get_room_messages(room_name: String, server: Arc<Mutex<Server>>) -> Result<impl warp::Reply, Infallible> {
+    let server = server.lock().unwrap();
+    match server.get_room_messages(&room_name) {
+        Ok(messages) => {
+            let json_response = warp::reply::json(&messages);
+            Ok(warp::reply::with_status(json_response, StatusCode::OK))
+        },
+        Err(err_message) => {
+            let json_response = warp::reply::json(&ErrorDetailsResponse {
+                error_id: "ERR__ROOM_MESSAGES_CONFLICT".to_string(),
+                error_message: format!("Cannot get messages for room {}: {}", room_name, err_message)
+            });
+            Ok(warp::reply::with_status(json_response, StatusCode::CONFLICT))
+        }
+    }
+}
+
+pub async fn post_message_to_room(room_name: String, body: HashMap<String, String>, server: Arc<Mutex<Server>>) -> Result<impl warp::Reply, Infallible> {
+    let username = body.get("username");
+    let message = body.get("message");
+    if username.is_none() || message.is_none() {
+        let json_response = warp::reply::json(&ErrorDetailsResponse {
+            error_id: "ERR__MESSAGE_POST_TO_ROOM_BAD_REQUEST".to_string(),
+            error_message: "Missing username or message in request body".to_string()
+        });
+        return Ok(warp::reply::with_status(json_response, StatusCode::BAD_REQUEST));
+    }
+    let username = username.unwrap();
+    let message = message.unwrap();
+
+    let mut server = server.lock().unwrap();
+    match server.post_message_to_room(&room_name, &username, &message) {
+        Ok(_) => {
+            let room = server.get_room_by_name(&room_name).unwrap();
+            let room = room.lock().unwrap();
+            let room_summary = serde_json::json!({
+                "id": room.id,
+                "name": room.name,
+                "users": room.users
+            });
+            let json_response = warp::reply::json(&room_summary);
+            Ok(warp::reply::with_status(json_response, StatusCode::CREATED))
+        },
+        Err(err_message) => {
+            let json_response = warp::reply::json(&ErrorDetailsResponse {
+                error_id: "ERR__MESSAGE_POST_TO_ROOM_CONFLICT".to_string(),
+                error_message: format!("Cannot post message to room {}: {}", room_name, err_message)
+            });
+            Ok(warp::reply::with_status(json_response, StatusCode::CONFLICT))
+        }
+    }
+}
