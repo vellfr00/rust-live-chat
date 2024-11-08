@@ -1,8 +1,9 @@
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use super::{message::Message, user::User};
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Room {
     pub id: Uuid,
     pub name: String,

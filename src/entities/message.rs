@@ -1,8 +1,9 @@
 use std::{sync::Arc, time::SystemTime};
 use super::user::User;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
     pub id: Uuid,
     pub author: Arc<User>,
