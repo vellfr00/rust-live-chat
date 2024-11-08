@@ -1,4 +1,5 @@
 pub mod users;
+pub mod rooms;
 
 use serde::{Serialize, Deserialize};
 
