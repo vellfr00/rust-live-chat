@@ -81,7 +81,7 @@ impl Server {
         }
     }
 
-    pub fn post_message_to_room(&mut self, room_name: &str, username: &str, message: &str) -> Result<(), &'static str> {
+    pub fn post_message_to_room(&mut self, room_name: &str, username: &str, message: &str) -> Result<Arc<Message>, &'static str> {
         if !self.is_room_name_already_registered(&room_name) {
             return Err("Room name not registered");
         }
@@ -94,8 +94,8 @@ impl Server {
         let mut room = room_arc.lock().unwrap();
         let user = self.get_user_by_username(&username).unwrap();
         let message = Arc::new(Message::new(user.clone(), message.to_string()));
-        match room.post_new_message(message) {
-            Ok(_) => Ok(()),
+        match room.post_new_message(message.clone()) {
+            Ok(_) => Ok(message.clone()),
             Err(_) => Err("Failed to post message to room")
         }
     }
@@ -247,7 +247,9 @@ mod tests {
         let mut server = Server::new("test".to_string());
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
-        server.post_message_to_room("test", "test", "test").unwrap();
+        let message = server.post_message_to_room("test", "test", "test").unwrap();
+        assert!(message.author.username == "test");
+        assert!(message.content == "test");
         assert_eq!(server.get_room_messages("test").unwrap().len(), 1);
     }
 

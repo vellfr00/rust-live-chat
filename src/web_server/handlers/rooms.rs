@@ -160,15 +160,8 @@ pub async fn post_message_to_room(room_name: String, body: HashMap<String, Strin
 
     let mut server = server.lock().unwrap();
     match server.post_message_to_room(&room_name, &username, &message) {
-        Ok(_) => {
-            let room = server.get_room_by_name(&room_name).unwrap();
-            let room = room.lock().unwrap();
-            let room_summary = serde_json::json!({
-                "id": room.id,
-                "name": room.name,
-                "users": room.users
-            });
-            let json_response = warp::reply::json(&room_summary);
+        Ok(message) => {
+            let json_response = warp::reply::json(&message);
             Ok(warp::reply::with_status(json_response, StatusCode::CREATED))
         },
         Err(err_message) => {

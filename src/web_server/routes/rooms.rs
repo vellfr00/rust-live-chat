@@ -80,6 +80,8 @@ fn get_room_messages(server: Arc<Mutex<Server>>) -> impl Filter<Extract = (impl 
  * Adds a message to the room.
  * Expects a JSON body with the username and message fields.
  * Returns 200 OK if the message was successfully added to the room, 409 CONFLICT if a conflict occurs.
+ * If missing fields, returns 400 BAD REQUEST.
+ * When OK returns the message.
  */
 fn post_message_to_room(server: Arc<Mutex<Server>>) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
     warp::path!("rooms" / String / "messages")
@@ -93,9 +95,8 @@ fn post_message_to_room(server: Arc<Mutex<Server>>) -> impl Filter<Extract = (im
 mod tests {
     use super::*;
     use crate::entities::{message::Message, user::User};
-    use crate::entities::room::Room;
     use crate::entities::server::Server;
-    use warp::{http::StatusCode, reply::Json};
+    use warp::http::StatusCode;
     use serde_json::{self};
     use warp::test::request;
     use crate::web_server::handlers::ErrorDetailsResponse;
@@ -413,6 +414,10 @@ mod tests {
             .await;
 
         assert_eq!(response.status(), StatusCode::CREATED);
+
+        let message: Message = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(message.content, "test message");
+        assert_eq!(message.author.username, "test_user");
     }
 
     #[tokio::test]
