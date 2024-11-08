@@ -50,7 +50,8 @@ async fn main() {
             web_server.run().await;
         },
         RunType::Client => {
-            println!("Client not implemented yet");
+            let cli_client = cli_client::CliClient::new(host, port);
+            cli_client.run().await;
         }
     }
 }
