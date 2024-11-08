@@ -60,3 +60,255 @@ fn add_user_to_room(server: Arc<Mutex<Server>>) -> impl Filter<Extract = (impl w
         .and(with_server(server))
         .and_then(handlers::rooms::add_user_to_room)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::entities::user::User;
+    use crate::entities::room::Room;
+    use crate::entities::server::Server;
+    use warp::{http::StatusCode, reply::Json};
+    use serde_json::{self};
+    use warp::test::request;
+    use crate::web_server::handlers::ErrorDetailsResponse;
+
+    #[tokio::test]
+    async fn test_get_room_by_name() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+        server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
+
+        let response = request()
+            .method("GET")
+            .path("/rooms/test_room")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_ne!(response.body().len(), 0);
+
+        let response_string: String = String::from_utf8(response.body().to_vec()).unwrap();
+        assert!(response_string.contains("test_room"));
+    }
+
+    #[tokio::test]
+    async fn test_get_room_by_name_room_not_found() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+
+        let response = request()
+            .method("GET")
+            .path("/rooms/test_room")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_ne!(response.body().len(), 0);
+        
+        let error: ErrorDetailsResponse = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(error.error_id, "ERR__ROOM_NOT_FOUND");
+    }
+
+    #[tokio::test]
+    async fn test_get_user_in_room_by_name() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+        server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
+
+        let response = request()
+            .method("GET")
+            .path("/rooms/test_room/users/test_user")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_ne!(response.body().len(), 0);
+
+        let user: User = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(user.username, "test_user");
+    }
+
+    #[tokio::test]
+    async fn test_get_user_in_room_by_name_room_not_found() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+
+        let response = request()
+            .method("GET")
+            .path("/rooms/test_room/users/test_user")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_ne!(response.body().len(), 0);
+        
+        let error: ErrorDetailsResponse = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(error.error_id, "ERR__ROOM_NOT_FOUND");
+    }
+
+    #[tokio::test]
+    async fn test_get_user_in_room_by_name_user_not_found() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+        server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
+
+        let response = request()
+            .method("GET")
+            .path("/rooms/test_room/users/test_user2")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_ne!(response.body().len(), 0);
+        
+        let error: ErrorDetailsResponse = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(error.error_id, "ERR__USER_NOT_FOUND");
+    }
+
+    #[tokio::test]
+    async fn test_create_room() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+
+        let response = request()
+            .method("POST")
+            .path("/rooms/test_room?creator_username=test_user")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_ne!(response.body().len(), 0);
+
+        let response_string = String::from_utf8(response.body().to_vec()).unwrap();
+        assert!(response_string.contains("test_room"));
+    }
+
+    #[tokio::test]
+    async fn test_create_room_missing_query_param() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+
+        let response = request()
+            .method("POST")
+            .path("/rooms/test_room")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_ne!(response.body().len(), 0);
+        
+        let error: ErrorDetailsResponse = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(error.error_id, "ERR__ROOM_CREATE_BAD_REQUEST");
+    }
+
+    #[tokio::test]
+    async fn test_create_room_user_not_found() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+
+        let response = request()
+            .method("POST")
+            .path("/rooms/test_room?creator_username=test_user")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_ne!(response.body().len(), 0);
+        
+        let error: ErrorDetailsResponse = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(error.error_id, "ERR__ROOM_CREATE_CONFLICT");
+    }
+
+    #[tokio::test]
+    async fn test_create_room_room_already_exists() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+        server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
+
+        let response = request()
+            .method("POST")
+            .path("/rooms/test_room?creator_username=test_user")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_ne!(response.body().len(), 0);
+        
+        let error: ErrorDetailsResponse = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(error.error_id, "ERR__ROOM_CREATE_CONFLICT");
+    }
+
+    #[tokio::test]
+    async fn test_add_user_to_room() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+        server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
+        server.clone().lock().unwrap().register_user("test_user2").unwrap();
+
+        let response = request()
+            .method("POST")
+            .path("/rooms/test_room/users/test_user2")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_ne!(response.body().len(), 0);
+
+        let response_string = String::from_utf8(response.body().to_vec()).unwrap();
+        assert!(response_string.contains("test_user2"));
+    }
+
+    #[tokio::test]
+    async fn test_add_user_to_room_room_not_found() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+
+        let response = request()
+            .method("POST")
+            .path("/rooms/test_room/users/test_user")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_ne!(response.body().len(), 0);
+        
+        let error: ErrorDetailsResponse = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(error.error_id, "ERR__USER_ADD_TO_ROOM_CONFLICT");
+    }
+
+    #[tokio::test]
+    async fn test_add_user_to_room_user_not_found() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+        server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
+
+        let response = request()
+            .method("POST")
+            .path("/rooms/test_room/users/test_user2")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_ne!(response.body().len(), 0);
+        
+        let error: ErrorDetailsResponse = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(error.error_id, "ERR__USER_ADD_TO_ROOM_CONFLICT");
+    }
+
+    #[tokio::test]
+    async fn test_add_user_to_room_user_already_in_room() {
+        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        server.clone().lock().unwrap().register_user("test_user").unwrap();
+        server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
+
+        let response = request()
+            .method("POST")
+            .path("/rooms/test_room/users/test_user")
+            .reply(&rooms_routes(server.clone()))
+            .await;
+
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+        assert_ne!(response.body().len(), 0);
+        
+        let error: ErrorDetailsResponse = serde_json::from_slice(response.body()).unwrap();
+        assert_eq!(error.error_id, "ERR__USER_ADD_TO_ROOM_CONFLICT");
+    }
+}
