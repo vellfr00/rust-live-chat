@@ -46,7 +46,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_user_in_server_by_username() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
 
         let response = request()
@@ -64,7 +64,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_user_in_server_by_username_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
 
         let response = request()
             .method("GET")
@@ -85,7 +85,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_user_to_server() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
 
         let response = request()
             .method("POST")
@@ -102,7 +102,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_user_to_server_already_exists() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         let user = User::new("test_user".to_string());
         server.lock().unwrap().register_user(&user.username).unwrap();
 

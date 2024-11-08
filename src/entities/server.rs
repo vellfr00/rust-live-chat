@@ -1,20 +1,16 @@
-use uuid::Uuid;
 use super::{message::Message, room::Room, user::User};
 use std::sync::{Arc, Mutex};
 
 #[derive(Debug)]
 pub struct Server {
-    pub id: Uuid,
-    pub name: String,
     pub users: Vec<Arc<User>>,
     pub rooms: Vec<Arc<Mutex<Room>>>,
 }
 
 impl Server {
-    pub fn new(name: String) -> Self {
+    pub fn new() -> Self {
         Self {
-            id: Uuid::new_v4(),
-            name,
+
             users: Vec::new(),
             rooms: Vec::new(),
         }
@@ -117,39 +113,40 @@ mod tests {
 
     #[test]
     fn test_server_new() {
-        let server = Server::new("test".to_string());
-        assert_eq!(server.name, "test");
+        let server = Server::new();
+        assert_eq!(server.rooms.len(), 0);
+        assert_eq!(server.users.len(), 0);
     }
 
     #[test]
     fn test_server_is_username_already_registered() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         assert_eq!(server.is_username_already_registered("test"), true);
     }
 
     #[test]
     fn test_server_is_username_already_registered_false() {
-        let server = Server::new("test".to_string());
+        let server = Server::new();
         assert_eq!(server.is_username_already_registered("test"), false);
     }
 
     #[test]
     fn test_server_get_user_by_username() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         assert_eq!(server.get_user_by_username("test").unwrap().username, "test");
     }
 
     #[test]
     fn test_server_get_user_by_username_none() {
-        let server = Server::new("test".to_string());
+        let server = Server::new();
         assert_eq!(server.get_user_by_username("test"), None);
     }
 
     #[test]
     fn test_server_is_room_name_already_registered() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         assert_eq!(server.is_room_name_already_registered("test"), true);
@@ -157,13 +154,13 @@ mod tests {
 
     #[test]
     fn test_server_is_room_name_already_registered_false() {
-        let server = Server::new("test".to_string());
+        let server = Server::new();
         assert_eq!(server.is_room_name_already_registered("test"), false);
     }
 
     #[test]
     fn test_server_get_room_by_name() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         assert_eq!(server.get_room_by_name("test").unwrap().lock().unwrap().name, "test");
@@ -171,20 +168,20 @@ mod tests {
 
     #[test]
     fn test_server_get_room_by_name_none() {
-        let server = Server::new("test".to_string());
+        let server = Server::new();
         assert!(server.get_room_by_name("test").is_none());
     }
 
     #[test]
     fn test_server_register_user() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         assert_eq!(server.users.len(), 1);
     }
 
     #[test]
     fn test_server_register_user_error() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         let result = server.register_user("test");
         assert_eq!(result, Err("Username already registered"));
@@ -192,7 +189,7 @@ mod tests {
 
     #[test]
     fn test_server_create_room() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         assert_eq!(server.rooms.len(), 1);
@@ -200,7 +197,7 @@ mod tests {
 
     #[test]
     fn test_server_create_room_error_room() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         let result = server.create_room("test", "test");
@@ -209,14 +206,14 @@ mod tests {
 
     #[test]
     fn test_server_create_room_error_creator() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         let result = server.create_room("test", "test");
         assert_eq!(result, Err("Creator user not registered"));
     }
 
     #[test]
     fn test_server_add_user_to_room() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         server.register_user("test2").unwrap();
@@ -226,7 +223,7 @@ mod tests {
 
     #[test]
     fn test_server_add_user_to_room_error_username() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         let result = server.add_user_to_room("test", "test2");
@@ -235,7 +232,7 @@ mod tests {
 
     #[test]
     fn test_server_add_user_to_room_error_add_user() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         let result = server.add_user_to_room("test", "test");
@@ -244,7 +241,7 @@ mod tests {
 
     #[test]
     fn test_server_post_message_to_room() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         let message = server.post_message_to_room("test", "test", "test").unwrap();
@@ -255,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_server_post_message_to_room_error_room() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         let result = server.post_message_to_room("test2", "test", "test");
@@ -264,7 +261,7 @@ mod tests {
 
     #[test]
     fn test_server_post_message_to_room_error_username() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         let result = server.post_message_to_room("test", "test2", "test");
@@ -273,7 +270,7 @@ mod tests {
 
     #[test]
     fn test_server_get_room_messages() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         server.post_message_to_room("test", "test", "test").unwrap();
@@ -282,7 +279,7 @@ mod tests {
 
     #[test]
     fn test_server_get_room_messages_no_messages() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         let result = server.get_room_messages("test");
@@ -291,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_server_get_room_messages_error() {
-        let mut server = Server::new("test".to_string());
+        let mut server = Server::new();
         server.register_user("test").unwrap();
         server.create_room("test", "test").unwrap();
         let result = server.get_room_messages("test2");

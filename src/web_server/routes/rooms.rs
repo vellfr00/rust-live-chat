@@ -103,7 +103,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_room_by_name() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 
@@ -122,7 +122,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_room_by_name_room_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
 
         let response = request()
             .method("GET")
@@ -139,7 +139,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_user_in_room_by_name() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 
@@ -158,7 +158,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_user_in_room_by_name_room_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
 
         let response = request()
@@ -176,7 +176,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_user_in_room_by_name_user_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 
@@ -195,7 +195,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_room() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
 
         let response = request()
@@ -213,7 +213,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_room_missing_query_param() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
 
         let response = request()
@@ -231,7 +231,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_room_user_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
 
         let response = request()
             .method("POST")
@@ -248,7 +248,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_room_room_already_exists() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 
@@ -267,7 +267,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_user_to_room() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
         server.clone().lock().unwrap().register_user("test_user2").unwrap();
@@ -287,7 +287,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_user_to_room_room_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
 
         let response = request()
@@ -305,7 +305,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_user_to_room_user_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 
@@ -324,7 +324,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_add_user_to_room_user_already_in_room() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 
@@ -343,7 +343,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_room_messages() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
         server.clone().lock().unwrap().post_message_to_room("test_room", "test_user", "test message").unwrap();
@@ -364,7 +364,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_room_messages_no_messages() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 
@@ -382,7 +382,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_room_messages_room_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
 
         let response = request()
             .method("GET")
@@ -399,7 +399,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_post_message_to_room() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 
@@ -422,7 +422,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_post_message_to_room_missing_fields() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 
@@ -444,7 +444,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_post_message_to_room_room_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
 
         let response = request()
@@ -466,7 +466,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_post_message_to_room_user_not_found() {
-        let server = Arc::new(Mutex::new(Server::new("test_server".to_string())));
+        let server = Arc::new(Mutex::new(Server::new()));
         server.clone().lock().unwrap().register_user("test_user").unwrap();
         server.clone().lock().unwrap().create_room("test_room", "test_user").unwrap();
 

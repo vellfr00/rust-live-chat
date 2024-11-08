@@ -11,7 +11,7 @@ pub struct WebServer {
 impl WebServer {
     pub fn new() -> WebServer {
         WebServer {
-            server: Arc::new(Mutex::new(Server::new("chat-rooms-server".to_string())))
+            server: Arc::new(Mutex::new(Server::new()))
         }
     }
 
