@@ -1,6 +1,6 @@
 use std::process::exit;
 
-mod api;
+mod apis;
 mod flows;
 
 pub struct CliClient {
@@ -26,7 +26,7 @@ impl CliClient {
 
     async fn is_server_alive(&self) -> () {
         println!("Checking connection with server at {}", self.server_endpoint);
-        let is_alive = api::fetch_api_is_server_alive(&self.server_endpoint).await;
+        let is_alive = apis::fetch_api_is_server_alive(&self.server_endpoint).await;
         if is_alive {
             println!("Server is reachable, connection established");
         } else {

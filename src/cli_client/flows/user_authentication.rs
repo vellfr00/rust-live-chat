@@ -1,4 +1,4 @@
-use crate::{cli_client::api::users::*, web_server::handlers::ErrorDetailsResponse};
+use crate::{cli_client::apis::users::*, web_server::handlers::ErrorDetailsResponse};
 use std::io::{self, Write};
 
 fn ask_for_authentication_username() -> String {
