@@ -1,6 +1,7 @@
-use std::{os::windows::process, process::exit};
+use std::process::exit;
 
 mod api;
+mod flows;
 
 pub struct CliClient {
     server_endpoint: String,
@@ -17,9 +18,10 @@ impl CliClient {
         }
     }
 
-    pub async fn run(&self) {
+    pub async fn run(&mut self) {
         println!("Starting CLI client");
         self.is_server_alive().await;
+        self.authenticate_user().await;
     }
 
     async fn is_server_alive(&self) -> () {
@@ -31,5 +33,10 @@ impl CliClient {
             println!("Server is unreachable, connection failed");
             exit(1);
         }
+    }
+
+    async fn authenticate_user(&mut self) {
+        self.current_username = flows::user_authentication::loop_user_authentication_flow(&self.server_endpoint).await;
+        println!("Authenticated as {}", self.current_username);
     }
 }

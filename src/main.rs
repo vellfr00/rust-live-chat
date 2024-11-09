@@ -50,7 +50,7 @@ async fn main() {
             web_server.run().await;
         },
         RunType::Client => {
-            let cli_client = cli_client::CliClient::new(host, port);
+            let mut cli_client = cli_client::CliClient::new(host, port);
             cli_client.run().await;
         }
     }
