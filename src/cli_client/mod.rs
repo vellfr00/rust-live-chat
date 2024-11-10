@@ -22,6 +22,7 @@ impl CliClient {
         println!("Starting CLI client");
         self.is_server_alive().await;
         self.authenticate_user().await;
+        self.choose_room().await;
     }
 
     async fn is_server_alive(&self) -> () {
@@ -38,5 +39,10 @@ impl CliClient {
     async fn authenticate_user(&mut self) {
         self.current_username = flows::user_authentication::loop_user_authentication_flow(&self.server_endpoint).await;
         println!("Authenticated as {}", self.current_username);
+    }
+
+    async fn choose_room(&mut self) -> () {
+        self.current_room = flows::room_choice::loop_room_choice_flow(&self.server_endpoint, &self.current_username).await;
+        println!("Entered room {}", self.current_room);
     }
 }
