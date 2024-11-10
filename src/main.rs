@@ -2,6 +2,8 @@ mod entities;
 mod web_server;
 mod cli_client;
 
+use std::env;
+
 use clap::{Parser, ValueEnum};
 use regex::Regex;
 
@@ -12,7 +14,9 @@ enum RunType {
     /// Run the client
     Client
 }
+
 const DEFAULT_HOST: &str = "127.0.0.1";
+const DEFAULT_HOST_DOCKER: &str = "0.0.0.0";
 const DEFAULT_PORT: u16 = 3030;
 
 #[derive(Parser)]
@@ -41,8 +45,25 @@ fn host_is_valid(s: &str) -> Result<String, String> {
 async fn main() {
     let cli = Cli::parse();
 
-    let host = cli.host;
+    let mut host = cli.host;
     let port = cli.port;
+
+    match env::var("ENVIRONMENT") {
+        Ok(env) => {
+            match env.as_str() {
+                "docker" => {
+                    println!("Running in Docker environment, using default host 0.0.0.0 to expose the server to the outside");
+                    host = DEFAULT_HOST_DOCKER.to_string();
+                },
+                _ => {
+                    println!("Running in unknown environment, using provided host and port");
+                }
+            }
+        },
+        Err(_) => { 
+            print!("No ENVIRONMENT variable set, using provided host and port");
+        }
+    }
 
     match cli.run {
         RunType::Server => {
