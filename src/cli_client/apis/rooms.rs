@@ -142,8 +142,6 @@ mod tests {
 
     use super::*;
     use mockito;
-    use serde::Serialize;
-    use uuid::Uuid;
     use serde_json;
 
     #[tokio::test]
