@@ -35,3 +35,9 @@ A CLI client can connect to the server inside the container as usual by running:
 ```bash
 cargo run -- --run=client --host=127.0.0.1 --port=3000
 ```
+
+## Tests
+To run the tests, execute:
+```bash
+cargo test
+```
